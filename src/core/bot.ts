@@ -6,6 +6,9 @@ import type { FastifyInstance } from "fastify";
 import type { Context } from "../models/telegraf.model";
 import { signInCmd, signOutCmd, signUpCmd, signUpMsgHandler } from "../commands/auth";
 import { helpCmd, startCmd } from "../commands/start";
+import { profileCmd } from "../commands/profile";
+import botCommands from "../commands/commands";
+import { createGroupCmd, handleCreateGroupFlow } from "../commands/create_group";
 // import type { Update } from "telegraf/typings/core/types/typegram";
 
 async function init(fastify: FastifyInstance) {
@@ -33,10 +36,15 @@ async function init(fastify: FastifyInstance) {
         bot.command("sign_out", signOutCmd);
         bot.command("sign_up", signUpCmd);
 
+        bot.command("profile", profileCmd);
+
+        // Ajo group Commands
+        bot.command("create_group", createGroupCmd);
+
         bot.on("message", async (ctx, next) => {
           const { state } = ctx.session;
           if (state.startsWith("auth:")) await signUpMsgHandler(ctx);
-          // else if (state.startsWith("trade:")) await tradeMessageHandler(ctx);
+          else if (state === "create_ajo") await handleCreateGroupFlow(ctx);
           return await next();
         });
 
@@ -48,6 +56,22 @@ async function init(fastify: FastifyInstance) {
         // const webhookUrl = `${WEBHOOK_URL}${webhookPath}`;
 
         // await bot.telegram.setWebhook(webhookUrl);
+
+        await bot.telegram.deleteMyCommands();
+        await Promise.all([
+          bot.telegram.setMyCommands(botCommands, {
+            scope: { type: "default" },
+          }),
+          bot.telegram.setMyCommands(botCommands, {
+            scope: { type: "all_private_chats" },
+          }),
+          bot.telegram.setMyCommands(botCommands, {
+            scope: { type: "all_group_chats" },
+          }),
+          bot.telegram.setMyCommands(botCommands, {
+            scope: { type: "all_chat_administrators" },
+          }),
+        ]);
 
         // fastify.post(webhookPath, async (request, reply) => {
         //   await bot.handleUpdate(request.body as Update);

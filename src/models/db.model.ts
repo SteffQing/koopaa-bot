@@ -8,3 +8,8 @@ export interface User {
   externalId: string;
   email: string;
 }
+
+export interface Balance {
+  solBalance: number;
+  usdcBalance: number;
+}

@@ -1,38 +1,66 @@
-import { Telegraf, Context } from 'telegraf';
-import { profileMessages } from '../messages/profile';
+import type { User, Balance } from "../models/db.model";
+import type { Context } from "../models/telegraf.model";
+import { escapeMarkdown } from "../utils";
+import { query } from "../utils/fetch";
 
-interface ExtendedContext extends Context {
-  // Add any additional properties specific to your bot
+async function profileCmd(ctx: Context) {
+  if (ctx.chat?.type !== "private") return;
+
+  try {
+    const { from, session } = ctx;
+    if (!from) return;
+
+    if (!session.token) {
+      const { message_id } = await ctx.reply("You are not signed in! Please call /sign_in to sign in.");
+      ctx.session.toDelete.push(message_id);
+      return;
+    }
+
+    await ctx.sendChatAction("typing");
+    const { error, data: user } = await query.get<User>("/user", {
+      headers: { Authorization: `Bearer ${session.token}` },
+    });
+
+    if (error) {
+      const { message_id } = await ctx.reply(error);
+      ctx.session.toDelete.push(message_id);
+      return;
+    }
+
+    if (!user) throw new Error("User not found");
+
+    const { message_id } = await ctx.replyWithMarkdownV2(
+      `👤 *Your Profile*\n\n` +
+        `📧 *Email:* ${escapeMarkdown(user.email || "N/A")}\n` +
+        `💳 *Wallet:* \`${escapeMarkdown(user.address)}\`\n\n` +
+        `💰 *Balances:* ${escapeMarkdown("_Loading..._")}`
+    );
+    ctx.session.toDelete.push(message_id);
+
+    await ctx.sendChatAction("typing");
+    const { data } = await query.get<Balance>("/public/balance", {
+      params: { address: user.address },
+    });
+
+    if (!data) throw new Error("Balance not found");
+
+    await ctx.telegram.editMessageText(
+      ctx.chat.id,
+      message_id,
+      undefined,
+      `👤 *Your Profile*\n\n` +
+        `📧 *Email:* ${escapeMarkdown(user.email || "N/A")}\n` +
+        `💳 *Wallet:* \`${escapeMarkdown(user.address)}\`\n\n` +
+        `💰 *Balances:*\n` +
+        `• SOL: *${escapeMarkdown(data.solBalance.toFixed(4))}*\n` +
+        `• USDC: *${escapeMarkdown(data.usdcBalance.toFixed(2))}*`,
+      { parse_mode: "MarkdownV2" }
+    );
+  } catch (error) {
+    console.error("An error occured in profileCmd", error);
+    const { message_id } = await ctx.reply("An error occurred. Please try again later.");
+    ctx.session.toDelete.push(message_id);
+  }
 }
 
-export const profileCommand = (bot: Telegraf<ExtendedContext>) => {
-  bot.command('profile', async (ctx: ExtendedContext) => {
-    try {
-      // Extract user information from context
-      const user = ctx.from;
-      if (!user) {
-        await ctx.reply('Sorry, I could not identify your user information.');
-        return;
-      }
-
-      // In a real implementation, you would fetch user's wallet info from a database
-      // For now, we'll simulate with placeholder data
-      const userProfile = {
-        userId: user.id,
-        username: user.username || 'N/A',
-        firstName: user.first_name || 'Unknown',
-        lastName: user.last_name || '',
-        walletAddress: '0x...' // Placeholder - in reality, this would come from your database
-      };
-
-      // Format the profile message
-      const profileMessage = profileMessages.getProfileMessage(userProfile);
-      
-      // Send the profile message
-      await ctx.reply(profileMessage);
-    } catch (error) {
-      console.error('Error in profile command:', error);
-      await ctx.reply('An error occurred while retrieving your profile.');
-    }
-  });
-};
+export { profileCmd };

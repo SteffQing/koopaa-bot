@@ -3,7 +3,7 @@ import { Context as TelegrafContext } from "telegraf";
 type AuthState = "auth:email" | "auth:otp";
 
 interface Session {
-  state: "idle" | "awaiting_issue" | AuthState;
+  state: "idle" | AuthState | "create_ajo";
   token: string | null;
   toDelete: number[];
   msgId: number | undefined;

@@ -23,7 +23,7 @@ const getDefaultSession = (): Session => ({
   msgId: undefined,
 });
 
-async function reset(ctx: Context) {
+async function reset(ctx: Context, deleteTrigger = false, deleteMsgId = false) {
   if (ctx.chat) {
     await ctx.telegram.sendChatAction(ctx.chat.id, "typing");
   }
@@ -34,14 +34,14 @@ async function reset(ctx: Context) {
     deletions.push(ctx.deleteMessage(id).catch(() => {}));
   }
 
-  if (ctx.session.msgId) {
+  if (ctx.session.msgId && deleteMsgId) {
     deletions.push(ctx.deleteMessage(ctx.session.msgId).catch(() => {}));
   }
 
   // the triggering message -> e.g /start
-  // if (ctx.message?.message_id) {
-  //   deletions.push(ctx.deleteMessage(ctx.message.message_id).catch(() => {}));
-  // }
+  if (ctx.message?.message_id && deleteTrigger) {
+    deletions.push(ctx.deleteMessage(ctx.message.message_id).catch(() => {}));
+  }
 
   await Promise.all(deletions);
 
@@ -49,4 +49,8 @@ async function reset(ctx: Context) {
   ctx.session = { ...getDefaultSession(), token: ctx.session.token };
 }
 
-export { asyncPipe, getDefaultSession, getEnv, reset };
+function escapeMarkdown(text = "") {
+  return text.replace(/([_*[\]()~`>#+\-=|{}.!])/g, "\\$1");
+}
+
+export { asyncPipe, getDefaultSession, getEnv, reset, escapeMarkdown };
