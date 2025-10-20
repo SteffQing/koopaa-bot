@@ -89,8 +89,8 @@ async function signOutCmd(ctx: Context) {
 async function revalidateCmd(ctx: Context) {
   if (ctx.chat?.type !== "private") return;
 
-  const { from, session } = ctx;
-  if (!from) return;
+  const { from, session, message } = ctx;
+  if (!from || !message) return;
 
   if (!session.token) {
     const { message_id } = await ctx.reply("You are not signed in! Please call /sign_in to sign in.");
@@ -104,6 +104,7 @@ async function revalidateCmd(ctx: Context) {
       headers: { Authorization: `Basic ${ctx.telegram.token}` },
     });
 
+    await reset(ctx, true);
     if (error || !message) throw error;
 
     const { message_id } = await ctx.reply(message);

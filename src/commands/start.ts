@@ -1,3 +1,4 @@
+import { formatAjoGroupCreated } from "../handlers/group.message";
 import type { Context } from "../models/telegraf.model";
 import { reset } from "../utils";
 import botCommands from "./commands";
@@ -18,7 +19,12 @@ async function startCmd(ctx: Context) {
     }
 
     await reset(ctx);
-    const { message_id } = await ctx.reply("Hello 🫡");
+    const message = formatAjoGroupCreated({
+      messageId: "Ibiza",
+      pda: "G1NfJkP5JorAJQ1WqWJAoiZDVbfxWyPoNa9X3eDhLYWx",
+      signature: "2mqsk8PbEJLDEfpNFwtHPeeSRUXyrP3eggfAjrnfKgQ8jdAK3Kkv77gDqs9j7CBztt2ReqNGDsoMzn5WVaAAu54w",
+    });
+    const { message_id } = await ctx.reply(message);
     ctx.session.toDelete.push(message_id);
   } catch (error) {
     const { message_id } = await ctx.reply("An error occurred. Please try again later.");

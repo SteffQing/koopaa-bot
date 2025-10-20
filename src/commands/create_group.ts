@@ -12,6 +12,10 @@ import {
   TagMarkup,
 } from "../handlers/new_group.keyboard";
 
+const isNumeric = (value: string): boolean => {
+  return !isNaN(Number(value)) && value.trim() !== "";
+};
+
 async function createGroupCmd(ctx: Context) {
   if (ctx.chat?.type !== "private") return;
 
@@ -20,7 +24,6 @@ async function createGroupCmd(ctx: Context) {
   const key = "create_ajo:" + from.id;
 
   try {
-    await reset(ctx, true);
     if (!session.token) {
       const { message_id } = await ctx.reply("You need to sign in first.");
       ctx.session.toDelete.push(message_id);
@@ -31,6 +34,7 @@ async function createGroupCmd(ctx: Context) {
     const { data, error } = await query.get<Balance>("/balance", {
       headers: { Authorization: `Bearer ${session.token}` },
     });
+    await reset(ctx, true);
 
     if (error) throw error;
     if (!data) throw new Error("Failed to fetch balance");
@@ -39,11 +43,13 @@ async function createGroupCmd(ctx: Context) {
 
     ctx.session.state = "create_ajo";
     cache.set(key, "{}");
-    const { message_id } = await ctx.reply("🧱 Let's create a new group!\n\nWhat’s the name of your group?");
+    const { message_id } = await ctx.reply("🧱 Let's create a new group!\n\nWhat would you name your group?");
     ctx.session.toDelete.push(message_id);
   } catch (error) {
     console.error("error in createGroupCmd", error);
-    const { message_id } = await ctx.reply((error as Error).message + "\n\nTry again with /create_group.");
+    const { message_id } = await ctx.reply(
+      (error instanceof Error ? error.message : String(error)) + "\n\nTry again with /create_group."
+    );
     ctx.session.toDelete.push(message_id);
     ctx.session.state = "idle";
     cache.delete(key);
@@ -80,7 +86,12 @@ async function handleCreateGroupFlow(ctx: Context) {
     switch (currentStep) {
       case "name":
         {
-          partial.name = text;
+          if (text.trim().length < 3 || text.trim().length > 50) {
+            const { message_id } = await ctx.reply("Please enter a name between 3 and 50 characters.");
+            ctx.session.toDelete.push(message_id);
+            return;
+          }
+          partial.name = text.trim();
           const { message_id } = await ctx.reply(
             "✍️ Great! Please provide a description for your group (10–500 characters)."
           );
@@ -90,7 +101,12 @@ async function handleCreateGroupFlow(ctx: Context) {
 
       case "description":
         {
-          partial.description = text;
+          if (text.trim().length < 10 || text.trim().length > 500) {
+            const { message_id } = await ctx.reply("Please enter a description between 10 and 500 characters.");
+            ctx.session.toDelete.push(message_id);
+            return;
+          }
+          partial.description = text.trim();
           const { message_id } = await ctx.reply("👥 How many participants do you want? (3–20)");
           ctx.session.toDelete.push(message_id);
         }
@@ -98,6 +114,16 @@ async function handleCreateGroupFlow(ctx: Context) {
 
       case "max_participants":
         {
+          if (!isNumeric(text)) {
+            const { message_id } = await ctx.reply("Please enter a valid number of maximum participants.");
+            ctx.session.toDelete.push(message_id);
+            return;
+          }
+          if (Number(text) < 3 || Number(text) > 20) {
+            const { message_id } = await ctx.reply("Please enter a number between 3 and 20.");
+            ctx.session.toDelete.push(message_id);
+            return;
+          }
           partial.max_participants = Number(text);
           const { message_id } = await ctx.reply("💰 What’s the contribution amount per round (in USDC)?");
           ctx.session.toDelete.push(message_id);
@@ -106,6 +132,16 @@ async function handleCreateGroupFlow(ctx: Context) {
 
       case "contribution_amount":
         {
+          if (!isNumeric(text)) {
+            const { message_id } = await ctx.reply("Please enter a valid contribution amount.");
+            ctx.session.toDelete.push(message_id);
+            return;
+          }
+          if (Number(text) < 0) {
+            const { message_id } = await ctx.reply("Please enter a value greater than 0.");
+            ctx.session.toDelete.push(message_id);
+            return;
+          }
           partial.contribution_amount = Number(text);
           const { message_id } = await ctx.reply("⏰ How often should members contribute?", {
             reply_markup: ContributionIntervalMarkup,
