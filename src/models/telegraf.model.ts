@@ -1,6 +1,6 @@
 import { Context as TelegrafContext } from "telegraf";
 
-type AuthState = "auth:email" | "auth:otp";
+type AuthState = "auth:email" | "auth:otp" | "auth:revalidate";
 
 interface Session {
   state: "idle" | AuthState | "create_ajo";

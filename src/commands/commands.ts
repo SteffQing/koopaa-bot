@@ -25,6 +25,22 @@ const botCommands: BotCommand[] = [
     command: "my_groups",
     description: "See the list of groups you belong to",
   },
+  {
+    command: "revalidate",
+    description: "Revalidate your account",
+  },
+  {
+    command: "sign_in",
+    description: "Sign in to your account",
+  },
+  {
+    command: "sign_out",
+    description: "Sign out of your account",
+  },
+  {
+    command: "sign_up",
+    description: "Sign up to create a new account",
+  },
 ] as const;
 
 export default botCommands;

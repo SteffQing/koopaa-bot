@@ -1,5 +1,6 @@
 import { fmt, bold, italic } from "telegraf/format";
 import type { CreateAjoGroupFormValues } from "../schema/create.ajo";
+import { GridAjoSetup } from "../models/koopaa.api";
 
 function formatAjoGroupSummary(v: CreateAjoGroupFormValues) {
   return fmt`🧾 ${bold("Group Creation Summary")}
@@ -16,4 +17,18 @@ function formatAjoGroupSummary(v: CreateAjoGroupFormValues) {
 `;
 }
 
-export { formatAjoGroupSummary };
+function formatAjoGroupCreated({ signature, pda, messageId }: GridAjoSetup) {
+  const explorer = `https://solscan.io/tx/${signature}?cluster=devnet`;
+
+  return fmt`🎉 ${bold("Group Created Successfully!")}
+
+🏷️ ${bold("Name:")} ${messageId}
+🏦 ${bold("Address:")} \`${pda}\`
+
+🔗 [View Transaction](${explorer})
+
+${italic("Your group is now live on-chain. You can invite members and start contributions!")}
+  `;
+}
+
+export { formatAjoGroupSummary, formatAjoGroupCreated };

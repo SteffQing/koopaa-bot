@@ -2,8 +2,9 @@ import cache from "../db/cache";
 import type { Context } from "../models/telegraf.model";
 import { createAjoGroupSchema, type CreateAjoGroupFormValues } from "../schema/create.ajo";
 import { query } from "../utils/fetch";
-import { formatAjoGroupSummary } from "../messages/group";
+import { formatAjoGroupCreated, formatAjoGroupSummary } from "../handlers/group.message";
 import { reset } from "../utils";
+import type { GridAjoSetup } from "../models/koopaa.api";
 
 async function selectedCoverCallback(ctx: Context) {
   if (!ctx.callbackQuery || !("data" in ctx.callbackQuery) || !ctx.callbackQuery.data || !ctx.from) return;
@@ -20,9 +21,9 @@ async function selectedCoverCallback(ctx: Context) {
     }
 
     await ctx.answerCbQuery();
-    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
 
     partial.group_cover_photo = coverNum;
+    cache.set(key, JSON.stringify(partial));
     const parsed = createAjoGroupSchema.safeParse(partial);
 
     if (!parsed.success) {
@@ -37,11 +38,12 @@ async function selectedCoverCallback(ctx: Context) {
     const { message_id } = await ctx.reply(summary, {
       reply_markup: {
         inline_keyboard: [
-          [{ text: "✅ Confirm", callback_data: "create_ajo:confirm" }],
-          [{ text: "❌ Cancel", callback_data: "create_ajo:cancel" }],
+          [
+            { text: "✅ Confirm", callback_data: "create_ajo:confirm" },
+            { text: "❌ Cancel", callback_data: "create_ajo:cancel" },
+          ],
         ],
       },
-      parse_mode: "MarkdownV2",
     });
     ctx.session.toDelete.push(message_id);
   } catch (error) {
@@ -60,14 +62,14 @@ async function confirmOrCancelCreateAjoCallback(ctx: Context) {
     const [, action] = ctx.callbackQuery.data.split(":");
 
     await reset(ctx);
-    await ctx.answerCbQuery();
+    await ctx.answerCbQuery().catch(() => {});
 
     if (action === "confirm") {
-      await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
       const parsed = createAjoGroupSchema.safeParse(partial);
       if (!parsed.success) throw new Error("Invalid input");
 
-      const { data, error } = await query.post("/grid/create_ajo", {
+      await ctx.sendChatAction("upload_document");
+      const { data, error } = await query.post<GridAjoSetup>("/grid", {
         body: parsed.data,
         headers: { Authorization: `Bearer ${ctx.session.token}` },
       });
@@ -75,7 +77,8 @@ async function confirmOrCancelCreateAjoCallback(ctx: Context) {
       if (error) throw error;
       if (!data) throw new Error("Failed to create ajo group");
 
-      const { message_id } = await ctx.reply("Ajo group created!");
+      const message = formatAjoGroupCreated({ ...data, messageId: partial.name });
+      const { message_id } = await ctx.reply(message);
       ctx.session.toDelete.push(message_id);
     } else if (action === "cancel") {
       const { message_id } = await ctx.reply("Ajo group creation cancelled.");
@@ -85,7 +88,7 @@ async function confirmOrCancelCreateAjoCallback(ctx: Context) {
     cache.delete(key);
   } catch (error) {
     console.error(error);
-    await ctx.answerCbQuery(error instanceof Error ? error.message : "An error occurred.");
+    await ctx.answerCbQuery(error instanceof Error ? error.message : "An error occurred.", { show_alert: true });
   }
 }
 

@@ -86,6 +86,36 @@ async function signOutCmd(ctx: Context) {
   }
 }
 
+async function revalidateCmd(ctx: Context) {
+  if (ctx.chat?.type !== "private") return;
+
+  const { from, session } = ctx;
+  if (!from) return;
+
+  if (!session.token) {
+    const { message_id } = await ctx.reply("You are not signed in! Please call /sign_in to sign in.");
+    ctx.session.toDelete.push(message_id);
+    return;
+  }
+  try {
+    await ctx.sendChatAction("typing");
+    const { error, message } = await query.put<{ token: string }>("/auth/revalidate", {
+      body: { id: from.id.toString() },
+      headers: { Authorization: `Basic ${ctx.telegram.token}` },
+    });
+
+    if (error || !message) throw error;
+
+    const { message_id } = await ctx.reply(message);
+    ctx.session.toDelete.push(message_id);
+    ctx.session.state = "auth:revalidate";
+  } catch (error) {
+    console.error("An error occured in revalidateCmd", error);
+    const { message_id } = await ctx.reply(error instanceof Error ? error.message : String(error));
+    ctx.session.toDelete.push(message_id);
+  }
+}
+
 async function signUpMsgHandler(ctx: Context) {
   if (!ctx.message || !("text" in ctx.message)) return;
 
@@ -142,10 +172,27 @@ async function signUpMsgHandler(ctx: Context) {
 
         break;
 
+      case "auth:revalidate":
+        await ctx.sendChatAction("typing");
+        const revalidate = await query.patch<{ token: string }>("/auth/revalidate", {
+          body: { otp: text, id: from.id.toString() },
+          headers: { Authorization: `Basic ${ctx.telegram.token}` },
+        });
+        {
+          const { message_id } = await ctx.reply(revalidate.message ?? revalidate.error ?? "An unknown error occured");
+          ctx.session.toDelete.push(message_id);
+        }
+
+        if (revalidate.data !== undefined) {
+          ctx.session = { ...session, token: revalidate.data.token, state: "idle" };
+        }
+
+        break;
+
       default:
         break;
     }
   } catch (error) {}
 }
 
-export { signInCmd, signOutCmd, signUpCmd, signUpMsgHandler };
+export { signInCmd, signOutCmd, signUpCmd, signUpMsgHandler, revalidateCmd };

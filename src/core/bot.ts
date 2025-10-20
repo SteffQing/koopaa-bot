@@ -4,11 +4,12 @@ import { getDefaultSession } from "../utils";
 import store from "../db/sqlite3";
 import type { FastifyInstance } from "fastify";
 import type { Context } from "../models/telegraf.model";
-import { signInCmd, signOutCmd, signUpCmd, signUpMsgHandler } from "../commands/auth";
+import { revalidateCmd, signInCmd, signOutCmd, signUpCmd, signUpMsgHandler } from "../commands/auth";
 import { helpCmd, startCmd } from "../commands/start";
 import { profileCmd } from "../commands/profile";
 import botCommands from "../commands/commands";
 import { createGroupCmd, handleCreateGroupFlow } from "../commands/create_group";
+import { confirmOrCancelCreateAjoCallback, selectedCoverCallback } from "../callbacks/group";
 // import type { Update } from "telegraf/typings/core/types/typegram";
 
 async function init(fastify: FastifyInstance) {
@@ -35,11 +36,14 @@ async function init(fastify: FastifyInstance) {
         bot.command("sign_in", signInCmd);
         bot.command("sign_out", signOutCmd);
         bot.command("sign_up", signUpCmd);
+        bot.command("revalidate", revalidateCmd);
 
         bot.command("profile", profileCmd);
 
         // Ajo group Commands
         bot.command("create_group", createGroupCmd);
+        bot.action(/^(choose_cover):(.+)$/, selectedCoverCallback);
+        bot.action(/^(create_ajo):(.+)$/, confirmOrCancelCreateAjoCallback);
 
         bot.on("message", async (ctx, next) => {
           const { state } = ctx.session;
@@ -47,9 +51,6 @@ async function init(fastify: FastifyInstance) {
           else if (state === "create_ajo") await handleCreateGroupFlow(ctx);
           return await next();
         });
-
-        // bot.action(/close_(.+)/, closeTicketCallback);
-        // bot.action(/reply_(.+)/, replyTicketCallback);
 
         bot.launch(() => console.log("Bot is running..."));
         // const webhookPath = "/telegram";
@@ -81,7 +82,7 @@ async function init(fastify: FastifyInstance) {
         fastify.decorate("bot", bot);
       },
       {
-        name: "hawk-trading-bot",
+        name: "koopaa-bot",
       }
     ),
     {

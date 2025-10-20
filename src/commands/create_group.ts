@@ -5,6 +5,12 @@ import { type CreateAjoGroupFormValues } from "../schema/create.ajo";
 import { query } from "../utils/fetch";
 import type { Balance } from "../models/db.model";
 import { reset } from "../utils";
+import {
+  ContributionIntervalMarkup,
+  CoverPhotoMarkup,
+  PayoutIntervalMarkup,
+  TagMarkup,
+} from "../handlers/new_group.keyboard";
 
 async function createGroupCmd(ctx: Context) {
   if (ctx.chat?.type !== "private") return;
@@ -33,7 +39,7 @@ async function createGroupCmd(ctx: Context) {
 
     ctx.session.state = "create_ajo";
     cache.set(key, "{}");
-    const { message_id } = await ctx.reply("🧱 Let's create a new group!\n\nWhat’s the *name* of your group?");
+    const { message_id } = await ctx.reply("🧱 Let's create a new group!\n\nWhat’s the name of your group?");
     ctx.session.toDelete.push(message_id);
   } catch (error) {
     console.error("error in createGroupCmd", error);
@@ -76,7 +82,7 @@ async function handleCreateGroupFlow(ctx: Context) {
         {
           partial.name = text;
           const { message_id } = await ctx.reply(
-            "✍️ Great! Please provide a *description* for your group (10–500 chars)."
+            "✍️ Great! Please provide a description for your group (10–500 characters)."
           );
           ctx.session.toDelete.push(message_id);
         }
@@ -85,7 +91,7 @@ async function handleCreateGroupFlow(ctx: Context) {
       case "description":
         {
           partial.description = text;
-          const { message_id } = await ctx.reply("👥 How many *participants* do you want? (3–20)");
+          const { message_id } = await ctx.reply("👥 How many participants do you want? (3–20)");
           ctx.session.toDelete.push(message_id);
         }
         break;
@@ -93,7 +99,7 @@ async function handleCreateGroupFlow(ctx: Context) {
       case "max_participants":
         {
           partial.max_participants = Number(text);
-          const { message_id } = await ctx.reply("💰 What’s the *contribution amount* per round (in USDC)?");
+          const { message_id } = await ctx.reply("💰 What’s the contribution amount per round (in USDC)?");
           ctx.session.toDelete.push(message_id);
         }
         break;
@@ -102,11 +108,7 @@ async function handleCreateGroupFlow(ctx: Context) {
         {
           partial.contribution_amount = Number(text);
           const { message_id } = await ctx.reply("⏰ How often should members contribute?", {
-            reply_markup: {
-              keyboard: [[{ text: "Daily" }, { text: "Weekly" }, { text: "Monthly" }]],
-              resize_keyboard: true,
-              one_time_keyboard: true,
-            },
+            reply_markup: ContributionIntervalMarkup,
           });
           ctx.session.toDelete.push(message_id);
         }
@@ -116,18 +118,16 @@ async function handleCreateGroupFlow(ctx: Context) {
         {
           const intervals = ["Daily", "Weekly", "Monthly"];
           if (!intervals.includes(text)) {
-            const { message_id } = await ctx.reply("Please select a valid contribution interval.");
+            const { message_id } = await ctx.reply("Please select a valid contribution interval.", {
+              reply_markup: ContributionIntervalMarkup,
+            });
             ctx.session.toDelete.push(message_id);
             return;
           }
           const interval = text === "Daily" ? "1" : text === "Weekly" ? "7" : "30";
           partial.contribution_interval = interval;
           const { message_id } = await ctx.reply("💵 How often should payouts occur?", {
-            reply_markup: {
-              keyboard: [[{ text: "Weekly" }, { text: "Bi-Weekly" }, { text: "Monthly" }]],
-              resize_keyboard: true,
-              one_time_keyboard: true,
-            },
+            reply_markup: PayoutIntervalMarkup,
           });
           ctx.session.toDelete.push(message_id);
         }
@@ -137,22 +137,17 @@ async function handleCreateGroupFlow(ctx: Context) {
         {
           const intervals = ["Weekly", "Bi-Weekly", "Monthly"];
           if (!intervals.includes(text)) {
-            const { message_id } = await ctx.reply("Please select a valid payout interval.");
+            const { message_id } = await ctx.reply("Please select a valid payout interval.", {
+              reply_markup: PayoutIntervalMarkup,
+            });
             ctx.session.toDelete.push(message_id);
             return;
           }
           const interval = text === "Weekly" ? "7" : text === "Bi-Weekly" ? "14" : "30";
           partial.payout_interval = interval;
 
-          const { message_id } = await ctx.reply("🏷️ Choose a *tag* for your group", {
-            reply_markup: {
-              keyboard: [
-                [{ text: "Real Estate" }, { text: "Birthday" }, { text: "Finance" }],
-                [{ text: "Lifestyle" }, { text: "Education" }, { text: "Travel" }],
-              ],
-              resize_keyboard: true,
-              one_time_keyboard: true,
-            },
+          const { message_id } = await ctx.reply("🏷️ Choose a tag for your group", {
+            reply_markup: TagMarkup,
           });
           ctx.session.toDelete.push(message_id);
         }
@@ -163,7 +158,9 @@ async function handleCreateGroupFlow(ctx: Context) {
           const tags = ["real_estate", "birthday", "finance", "lifestyle", "education", "travel"] as const;
           const view_tags = ["Real Estate", "Birthday", "Finance", "Lifestyle", "Education", "Travel"];
           if (!view_tags.includes(text)) {
-            const { message_id } = await ctx.reply("Please select a valid tag.");
+            const { message_id } = await ctx.reply("Please select a valid tag.", {
+              reply_markup: TagMarkup,
+            });
             ctx.session.toDelete.push(message_id);
             return;
           }
@@ -173,7 +170,7 @@ async function handleCreateGroupFlow(ctx: Context) {
           const { message_id } = await ctx.reply("🖼️ Pick a cover photo for your group:");
           ctx.session.toDelete.push(message_id);
 
-          const base = "https://app.koopaa.fun/group_cover";
+          const base = "https://app.koopaa.fun/group-cover";
           const photos: InputMediaPhoto[] = Array.from({ length: 4 }, (_, i) => ({
             type: "photo",
             media: `${base}/${i + 1}.png`,
@@ -185,18 +182,7 @@ async function handleCreateGroupFlow(ctx: Context) {
           ctx.session.toDelete.push(...msgId);
 
           const msg = await ctx.reply("Which cover do you want to use?", {
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  { text: "1️⃣", callback_data: "choose_cover:1" },
-                  { text: "2️⃣", callback_data: "choose_cover:2" },
-                ],
-                [
-                  { text: "3️⃣", callback_data: "choose_cover:3" },
-                  { text: "4️⃣", callback_data: "choose_cover:4" },
-                ],
-              ],
-            },
+            reply_markup: CoverPhotoMarkup,
           });
           ctx.session.toDelete.push(msg.message_id);
         }
@@ -207,6 +193,8 @@ async function handleCreateGroupFlow(ctx: Context) {
 
         break;
     }
+    ctx.session.toDelete.push(ctx.message.message_id);
+    cache.set(key, JSON.stringify(partial));
   } catch (err) {
     console.error("Error in createGroupFlow:", err);
     const { message_id } = await ctx.reply("⚠️ Something went wrong. Try again with /create_group.");

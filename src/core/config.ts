@@ -8,7 +8,7 @@ const schema = {
     BOT_TOKEN: { type: "string", default: "" },
     NODE_ENV: { type: "string", default: "development" },
     WEBHOOK_URL: { type: "string", default: "" },
-    PORT: { type: "number", default: 3000 },
+    PORT: { type: "number", default: 4000 },
   },
 };
 
