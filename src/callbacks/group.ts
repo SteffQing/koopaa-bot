@@ -2,9 +2,10 @@ import cache from "../db/cache";
 import type { Context } from "../models/telegraf.model";
 import { createAjoGroupSchema, type CreateAjoGroupFormValues } from "../schema/create.ajo";
 import { query } from "../utils/fetch";
-import { formatAjoGroupCreated, formatAjoGroupSummary, formatPrivySigningError } from "../handlers/group.message";
+import { formatAjoGroupCreated, formatAjoGroupSummary } from "../handlers/group.message";
 import { reset } from "../utils";
-import type { GridAjoSetup } from "../models/koopaa.api";
+import type { GridAjoInit } from "../models/koopaa.api";
+import { privySigningError } from "../handlers/error.messages";
 
 async function selectedCoverCallback(ctx: Context) {
   if (!ctx.callbackQuery || !("data" in ctx.callbackQuery) || !ctx.callbackQuery.data || !ctx.from) return;
@@ -55,6 +56,7 @@ async function confirmOrCancelCreateAjoCallback(ctx: Context) {
   let firedCallback = false;
 
   const key = "create_ajo:" + ctx.from.id;
+  const msgId = ctx.session.msgId;
   try {
     if (!cache.has(key)) throw new Error("Group data is lost or expired. Please restart with /create_group.");
     const partial: CreateAjoGroupFormValues = JSON.parse(cache.get(key) || "{}");
@@ -69,7 +71,7 @@ async function confirmOrCancelCreateAjoCallback(ctx: Context) {
       firedCallback = true;
 
       await ctx.sendChatAction("upload_document");
-      const { data, error } = await query.post<GridAjoSetup>("/grid", {
+      const { data, error } = await query.post<GridAjoInit>("/grid", {
         body: parsed.data,
         headers: { Authorization: `Bearer ${ctx.session.token}` },
       });
@@ -77,26 +79,28 @@ async function confirmOrCancelCreateAjoCallback(ctx: Context) {
       if (error) throw error;
       if (!data) throw new Error("Error occured when creating ajo group. Please restart with /create_group.");
 
-      const message = formatAjoGroupCreated({ ...data, messageId: partial.name });
-      const { message_id } = await ctx.reply(message);
-      ctx.session.toDelete.push(message_id);
+      const message = formatAjoGroupCreated({ ...data, name: partial.name });
+      const { message_id } = await ctx.reply(message, {
+        reply_markup: { inline_keyboard: [[{ text: "Invite Code 📝", callback_data: `invite:${data.pda}` }]] },
+      });
+      ctx.session.msgId = message_id;
     } else if (action === "cancel") {
       await ctx.answerCbQuery("Ajo group creation cancelled.");
       firedCallback = true;
     }
 
     cache.delete(key);
-    await reset(ctx, true, true);
+    if (msgId) await ctx.telegram.editMessageReplyMarkup(ctx.chat!.id, msgId, undefined, undefined);
   } catch (error) {
     console.error("Error in confirmOrCancelCreateAjoCallback", error);
     const error_message = error instanceof Error ? error.message : String(error);
     if (error_message === "Privy signing error") {
-      const { message_id } = await ctx.reply(formatPrivySigningError());
+      const { message_id } = await ctx.reply(privySigningError);
       return ctx.session.toDelete.push(message_id);
     } else {
+      if (msgId) await ctx.telegram.editMessageReplyMarkup(ctx.chat!.id, msgId, undefined, undefined);
       if (!firedCallback) await ctx.answerCbQuery(error_message, { show_alert: true });
       else await ctx.reply(error_message).then((m) => ctx.session.toDelete.push(m.message_id));
-      await reset(ctx, false, true);
       return cache.delete(key);
     }
   }

@@ -10,6 +10,12 @@ import { profileCmd } from "../commands/profile";
 import botCommands from "../commands/commands";
 import { createGroupCmd, handleCreateGroupFlow } from "../commands/create_group";
 import { confirmOrCancelCreateAjoCallback, selectedCoverCallback } from "../callbacks/group";
+import {
+  confirmOrCancelRequestJoinAjoCallback,
+  getInviteCodeCallback,
+  handleRequestJoinWithCode,
+  requestJoinGroupCmd,
+} from "../commands/join_group";
 // import type { Update } from "telegraf/typings/core/types/typegram";
 
 async function init(fastify: FastifyInstance) {
@@ -40,15 +46,21 @@ async function init(fastify: FastifyInstance) {
 
         bot.command("profile", profileCmd);
 
-        // Ajo group Commands
+        // Create Ajo group Commands
         bot.command("create_group", createGroupCmd);
         bot.action(/^(choose_cover):(.+)$/, selectedCoverCallback);
         bot.action(/^(create_ajo):(.+)$/, confirmOrCancelCreateAjoCallback);
+
+        // Join Ajo group Commands
+        bot.command("join_group", requestJoinGroupCmd);
+        bot.action(/^(invite):(.+)$/, getInviteCodeCallback); // from create and other inline buttons
+        bot.action(/^(request_join_ajo):(.+)$/, confirmOrCancelRequestJoinAjoCallback);
 
         bot.on("message", async (ctx, next) => {
           const { state } = ctx.session;
           if (state.startsWith("auth:")) await signUpMsgHandler(ctx);
           else if (state === "create_ajo") await handleCreateGroupFlow(ctx);
+          else if (state === "join_ajo") await handleRequestJoinWithCode(ctx);
           return await next();
         });
 

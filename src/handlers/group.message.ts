@@ -1,6 +1,6 @@
 import { fmt, bold, italic, code, link } from "telegraf/format";
 import type { CreateAjoGroupFormValues } from "../schema/create.ajo";
-import { GridAjoSetup } from "../models/koopaa.api";
+import type { GridAjoInit } from "../models/koopaa.api";
 
 function formatAjoGroupSummary(v: CreateAjoGroupFormValues) {
   return fmt`🧾 ${bold("Group Creation Summary")}
@@ -17,12 +17,13 @@ function formatAjoGroupSummary(v: CreateAjoGroupFormValues) {
 `;
 }
 
-function formatAjoGroupCreated({ signature, pda, messageId }: GridAjoSetup) {
+type GridAjoInitWithPDA = Omit<GridAjoInit, "messageId"> & { pda: string; name: string };
+function formatAjoGroupCreated({ signature, name, pda }: GridAjoInitWithPDA) {
   const explorer = `https://solscan.io/tx/${signature}?cluster=devnet`;
 
   return fmt`🎉 ${bold("Group Created Successfully!")}
 
-🏷️ ${bold("Name:")} ${messageId}
+🏷️ ${bold("Name:")} ${name}
 🏦 ${bold("Address:")} ${code(pda)}
 
 🔗 ${link("View Transaction", explorer)}
@@ -31,15 +32,4 @@ ${italic("Your group is now live on-chain. You can invite members and start cont
   `;
 }
 
-function formatPrivySigningError() {
-  return fmt`
-${bold("⚠️ Privy Signing Error")}
-
-${italic("Your session data has expired and needs to be revalidated.")}
-Please use the /revalidate command to request a new OTP and set up a fresh session.
-
-Once that's done, you can return here and tap the ${bold("✅ Confirm")} button again to finish creating your group.
-  `;
-}
-
-export { formatAjoGroupSummary, formatAjoGroupCreated, formatPrivySigningError };
+export { formatAjoGroupSummary, formatAjoGroupCreated };

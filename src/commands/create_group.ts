@@ -34,7 +34,7 @@ async function createGroupCmd(ctx: Context) {
     const { data, error } = await query.get<Balance>("/balance", {
       headers: { Authorization: `Bearer ${session.token}` },
     });
-    await reset(ctx, true);
+    await reset(ctx);
 
     if (error) throw error;
     if (!data) throw new Error("Failed to fetch balance");
