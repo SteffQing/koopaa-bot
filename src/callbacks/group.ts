@@ -2,7 +2,7 @@ import cache from "../db/cache";
 import type { Context } from "../models/telegraf.model";
 import { createAjoGroupSchema, type CreateAjoGroupFormValues } from "../schema/create.ajo";
 import { query } from "../utils/fetch";
-import { formatAjoGroupCreated, formatAjoGroupSummary } from "../handlers/group.message";
+import { formatAjoGroupCreated, formatAjoGroupSummary } from "../handlers/create_group.message";
 import { reset } from "../utils";
 import type { GridAjoInit } from "../models/koopaa.api";
 import { privySigningError } from "../handlers/error.messages";

@@ -11,7 +11,7 @@ async function profileCmd(ctx: Context) {
     if (!from) return;
 
     if (!session.token) {
-      const { message_id } = await ctx.reply("You are not signed in! Please call /sign_in to sign in.");
+      const { message_id } = await ctx.reply("You need to /sign_in first.");
       ctx.session.toDelete.push(message_id);
       return;
     }

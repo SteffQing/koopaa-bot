@@ -18,7 +18,7 @@ async function startCmd(ctx: Context) {
     }
 
     await reset(ctx);
-    const { message_id } = await ctx.reply("Hello 🫡");
+    const { message_id } = await ctx.reply("Hello 🫡, and welcome 😌");
     ctx.session.toDelete.push(message_id);
   } catch (error) {
     const { message_id } = await ctx.reply("An error occurred. Please try again later.");

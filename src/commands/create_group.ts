@@ -25,7 +25,7 @@ async function createGroupCmd(ctx: Context) {
 
   try {
     if (!session.token) {
-      const { message_id } = await ctx.reply("You need to sign in first.");
+      const { message_id } = await ctx.reply("You need to /sign_in first.");
       ctx.session.toDelete.push(message_id);
       return;
     }

@@ -1,35 +1,76 @@
-import { Telegraf, Context } from "telegraf";
-import { myGroupsMessages } from "../handlers/my_groups";
+import type { Context } from "../models/telegraf.model";
+import { query } from "../utils/fetch";
+import cache from "../db/cache";
+import type { MyGroupsSummary, GroupSelectionType } from "../models/mygroup.model";
+import {
+  formatGroupSummary,
+  formatMyGroupsSummary,
+  myGroupSelectKeyboard,
+  myGroupSummarySelectViewKeyboard,
+} from "../handlers/my_group.handler";
 
-interface ExtendedContext extends Context {
-  // Add any additional properties specific to your bot
+async function myGroupsCmd(ctx: Context) {
+  if (ctx.chat?.type !== "private") return;
+  const { session, from } = ctx;
+  if (!from) return;
+
+  try {
+    if (!session.token) {
+      const { message_id } = await ctx.reply("You need to sign in first.");
+      ctx.session.toDelete.push(message_id);
+      return;
+    }
+
+    await ctx.sendChatAction("typing");
+    const { data, error, message } = await query.get<MyGroupsSummary>("/group/my-groups-summary", {
+      headers: { Authorization: session.token },
+    });
+    if (error) throw error;
+    if (!data || !message) throw new Error("Error fetching groups summary");
+
+    cache.set(from.id.toString(), JSON.stringify(data));
+    const msg = formatMyGroupsSummary(data, from.first_name);
+    await ctx.reply(msg, {
+      reply_markup: { inline_keyboard: myGroupSummarySelectViewKeyboard },
+    });
+  } catch (error) {
+    console.error("error in myGroupsCmd", error);
+  }
 }
 
-export const myGroupsCommand = (bot: Telegraf<ExtendedContext>) => {
-  bot.command("my_groups", async (ctx: ExtendedContext) => {
-    try {
-      // Extract user information from context
-      const user = ctx.from;
-      if (!user) {
-        await ctx.reply("Sorry, I could not identify your user information.");
-        return;
-      }
+async function viewMyGroupsSummaryCallback(ctx: Context) {
+  if (!ctx.callbackQuery || !("data" in ctx.callbackQuery) || !ctx.callbackQuery.data || !ctx.from) return;
+  const [, selection] = ctx.callbackQuery.data.split(":") as [string, GroupSelectionType];
 
-      // In a real implementation, you would fetch the user's groups from a database
-      // For now, we'll simulate with placeholder data
-      const userGroups = [
-        { id: "grp_001", name: "Family Savings", members: 4, totalAmount: 400 },
-        { id: "grp_002", name: "Friends Trip Fund", members: 6, totalAmount: 900 },
-      ];
+  const userId = ctx.from.id.toString();
+  try {
+    const cached = cache.get(userId);
+    cache.delete(userId);
+    if (!cached) throw new Error("No group summary in cache 🫣");
+    await ctx.answerCbQuery();
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
 
-      // Format the my groups message
-      const myGroupsMessage = myGroupsMessages.getMyGroupsMessage(userGroups);
+    const data: MyGroupsSummary = JSON.parse(cached);
+    const selectedData =
+      selection === "active"
+        ? data.activeGroupsIn
+        : selection === "notStarted"
+        ? data.notStartedGroupsIn
+        : data.inWaitingRoomGroups;
 
-      // Send the my groups message
-      await ctx.reply(myGroupsMessage, { parse_mode: "Markdown" });
-    } catch (error) {
-      console.error("Error in my_groups command:", error);
-      await ctx.reply("An error occurred while retrieving your groups.");
-    }
-  });
-};
+    if (selectedData.length === 0) throw new Error("Nothing to see here 👀");
+
+    const msg = formatGroupSummary(selectedData, selection);
+    const keyboard = myGroupSelectKeyboard(selectedData);
+    await ctx.reply(msg, {
+      reply_markup: { inline_keyboard: keyboard },
+    });
+  } catch (error) {
+    console.error("error occured in viewMyGroupsSummaryCallback", error);
+    const error_message = error instanceof Error ? error.message : String(error);
+
+    await ctx.answerCbQuery(error_message, { show_alert: true });
+  }
+}
+
+export { viewMyGroupsSummaryCallback, myGroupsCmd };

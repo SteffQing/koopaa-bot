@@ -33,6 +33,12 @@ type AjoGroupData = {
   closeVotes: string[];
   waitingRoom: string[];
   isClosed: boolean;
+  admin: string;
 };
 
-export type { GridAjoSetup, AjoGroupData, AjoGroupParticipantData, Tag, GridAjoInit };
+type AjoGroupDataWithYou = {
+  address: string;
+  group: AjoGroupData;
+};
+
+export type { GridAjoSetup, AjoGroupData, AjoGroupParticipantData, Tag, GridAjoInit, AjoGroupDataWithYou };
