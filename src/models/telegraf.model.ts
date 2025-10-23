@@ -12,5 +12,6 @@ interface Session {
 type Context = TelegrafContext & {
   session: Session;
   match?: RegExpExecArray;
+  _cbAnswered?: boolean;
 };
 export type { Session, Context };

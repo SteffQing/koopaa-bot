@@ -29,14 +29,6 @@ What do you wish to view? 👇
 `;
 }
 
-const myGroupSummarySelectViewKeyboard = [
-  [
-    { text: "🔥 Active", callback_data: `group_summary:active` },
-    { text: "🕒 Not Started", callback_data: `group_summary:notStarted` },
-  ],
-  [{ text: "⏳ Waiting Room", callback_data: `group_summary:waitingRoom` }],
-];
-
 function formatGroupSummary(summaries: MyGroupSummary[], type: GroupSelectionType) {
   const groups = summaries.map((s, i) => `${i + 1}. ${s.name}`).join("\n");
   return fmt`${bold(
@@ -52,8 +44,4 @@ ${italic("Please select any of the groups from the buttons below to view more ac
 `;
 }
 
-function myGroupSelectKeyboard(groups: MyGroupSummary[]) {
-  return groups.slice(0, 2).map((group) => [{ text: group.name, callback_data: `group:${group.pda}` }]);
-}
-
-export { formatMyGroupsSummary, myGroupSummarySelectViewKeyboard, myGroupSelectKeyboard, formatGroupSummary };
+export { formatMyGroupsSummary, formatGroupSummary };

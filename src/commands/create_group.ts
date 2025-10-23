@@ -10,7 +10,7 @@ import {
   CoverPhotoMarkup,
   PayoutIntervalMarkup,
   TagMarkup,
-} from "../handlers/new_group.keyboard";
+} from "../keyboards/create_group.keyboard";
 
 const isNumeric = (value: string): boolean => {
   return !isNaN(Number(value)) && value.trim() !== "";

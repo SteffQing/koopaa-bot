@@ -1,0 +1,34 @@
+import type { AjoGroupDataWithYou } from "../models/koopaa.api";
+
+function ajoGroupKeyboard({ group, address }: AjoGroupDataWithYou) {
+  const inWaitingRoom = group.waitingRoom.map((w) => w.toLowerCase()).includes(address.toLowerCase());
+  if (inWaitingRoom) return [[{ text: "Ping Admin for Approval", callback_data: `ping:${group.admin}:${group.pda}` }]];
+
+  const isAdmin = group.admin.toLowerCase() === address.toLowerCase();
+
+  if (!group.startTimestamp) {
+    const keyboard = [];
+    keyboard.push([{ text: "Generate Invite Code", callback_data: `invite:${group.pda}` }]);
+    if (isAdmin)
+      keyboard.push([
+        { text: "Waiting Room", callback_data: `start:${group.pda}` },
+        { text: "Add Participant", callback_data: `start:${group.pda}` },
+      ]);
+    return keyboard;
+  }
+
+  const you = group.participants.find((p) => p.participant.toLowerCase() === address.toLowerCase());
+  if (!you) return [];
+
+  const now = Math.floor(Date.now() / 1000);
+  const elapsed = now - group.startTimestamp;
+  const intervalInSeconds = group.contributionInterval * 86400;
+  const currentContributionRound = Math.floor(elapsed / intervalInSeconds);
+
+  if (currentContributionRound > you.contributionRound)
+    return [[{ text: "Contribute", callback_data: `contribute:${group.pda}` }]];
+
+  return [];
+}
+
+export { ajoGroupKeyboard };

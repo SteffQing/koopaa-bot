@@ -34,4 +34,11 @@ const CoverPhotoMarkup = {
   one_time_keyboard: true,
 };
 
-export { ContributionIntervalMarkup, PayoutIntervalMarkup, TagMarkup, CoverPhotoMarkup };
+const ConfirmGroupCreate = [
+  [
+    { text: "✅ Confirm", callback_data: "create_ajo:confirm" },
+    { text: "❌ Cancel", callback_data: "create_ajo:cancel" },
+  ],
+];
+
+export { ContributionIntervalMarkup, PayoutIntervalMarkup, TagMarkup, CoverPhotoMarkup, ConfirmGroupCreate };

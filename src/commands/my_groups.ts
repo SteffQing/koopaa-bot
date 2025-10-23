@@ -2,12 +2,8 @@ import type { Context } from "../models/telegraf.model";
 import { query } from "../utils/fetch";
 import cache from "../db/cache";
 import type { MyGroupsSummary, GroupSelectionType } from "../models/mygroup.model";
-import {
-  formatGroupSummary,
-  formatMyGroupsSummary,
-  myGroupSelectKeyboard,
-  myGroupSummarySelectViewKeyboard,
-} from "../handlers/my_group.handler";
+import { myGroupSelectKeyboard, myGroupSummarySelectViewKeyboard } from "../keyboards/my_group.keyboard";
+import { formatMyGroupsSummary, formatGroupSummary } from "../messages/my_group.keyboard";
 
 async function myGroupsCmd(ctx: Context) {
   if (ctx.chat?.type !== "private") return;

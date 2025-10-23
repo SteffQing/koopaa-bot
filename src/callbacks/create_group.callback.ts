@@ -2,53 +2,44 @@ import cache from "../db/cache";
 import type { Context } from "../models/telegraf.model";
 import { createAjoGroupSchema, type CreateAjoGroupFormValues } from "../schema/create.ajo";
 import { query } from "../utils/fetch";
-import { formatAjoGroupCreated, formatAjoGroupSummary } from "../handlers/create_group.message";
+import { formatAjoGroupCreated, formatAjoGroupSummary } from "../messages/create_group.message";
 import { reset } from "../utils";
 import type { GridAjoInit } from "../models/koopaa.api";
-import { privySigningError } from "../handlers/error.messages";
+import { privySigningError } from "../messages/error.messages";
+import { errorWrapper } from "../utils/helpers";
+import { ConfirmGroupCreate } from "../keyboards/create_group.keyboard";
 
-async function selectedCoverCallback(ctx: Context) {
-  if (!ctx.callbackQuery || !("data" in ctx.callbackQuery) || !ctx.callbackQuery.data || !ctx.from) return;
+async function _selectedCoverCallback(ctx: Context) {
+  if (!ctx.callbackQuery || !("data" in ctx.callbackQuery) || !ctx.from) throw new Error("No data in callback");
 
-  try {
-    const key = "create_ajo:" + ctx.from.id;
-    if (!cache.has(key)) throw new Error("Group data is missing or expired. Please start again");
-    const partial: CreateAjoGroupFormValues = JSON.parse(cache.get(key) || "{}");
+  const key = "create_ajo:" + ctx.from.id;
+  if (!cache.has(key)) throw new Error("Group data is missing or expired. Please start again");
+  const partial: CreateAjoGroupFormValues = JSON.parse(cache.get(key) || "{}");
 
-    const [, cover] = ctx.callbackQuery.data.split(":");
-    const coverNum = Number(cover);
-    if (!coverNum || coverNum < 1 || coverNum > 4) throw new Error("Invalid cover selected.");
+  const [, cover] = ctx.callbackQuery.data.split(":");
+  const coverNum = Number(cover);
+  if (!coverNum || coverNum < 1 || coverNum > 4) throw new Error("Invalid cover selected.");
 
-    partial.group_cover_photo = coverNum;
-    cache.set(key, JSON.stringify(partial));
-    await ctx.answerCbQuery("✅ Cover photo selected!");
+  partial.group_cover_photo = coverNum;
+  cache.set(key, JSON.stringify(partial));
+  await ctx.answerCbQuery("✅ Cover photo selected!");
 
-    const parsed = createAjoGroupSchema.safeParse(partial);
-    if (!parsed.success) {
-      const errors = parsed.error.issues.map((e) => `- ${e.message}`).join("\n");
-      const { message_id } = await ctx.reply(`❌ Invalid input:\n${errors}\n\nPlease restart with /create_group`);
-      cache.delete(key);
-      ctx.session.toDelete.push(message_id);
-      return;
-    }
-
-    const summary = formatAjoGroupSummary(parsed.data);
-    const { message_id } = await ctx.reply(summary, {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            { text: "✅ Confirm", callback_data: "create_ajo:confirm" },
-            { text: "❌ Cancel", callback_data: "create_ajo:cancel" },
-          ],
-        ],
-      },
-    });
-    ctx.session.msgId = message_id;
-  } catch (error) {
-    console.error(error);
-    await ctx.answerCbQuery(error instanceof Error ? error.message : "An error occurred.", { show_alert: true });
-    await reset(ctx);
+  const parsed = createAjoGroupSchema.safeParse(partial);
+  if (!parsed.success) {
+    const errors = parsed.error.issues.map((e) => `- ${e.message}`).join("\n");
+    const { message_id } = await ctx.reply(`❌ Invalid input:\n${errors}\n\nPlease restart with /create_group`);
+    cache.delete(key);
+    ctx.session.toDelete.push(message_id);
+    return;
   }
+
+  const summary = formatAjoGroupSummary(parsed.data);
+  const { message_id } = await ctx.reply(summary, {
+    reply_markup: {
+      inline_keyboard: ConfirmGroupCreate,
+    },
+  });
+  ctx.session.msgId = message_id;
 }
 
 async function confirmOrCancelCreateAjoCallback(ctx: Context) {
@@ -105,5 +96,7 @@ async function confirmOrCancelCreateAjoCallback(ctx: Context) {
     }
   }
 }
+
+const selectedCoverCallback = errorWrapper(_selectedCoverCallback);
 
 export { selectedCoverCallback, confirmOrCancelCreateAjoCallback };
