@@ -1,8 +1,8 @@
 import type { Context } from "../models/telegraf.model";
 import { query } from "../utils/fetch";
 import { AjoGroupDataWithYou } from "../models/koopaa.api";
-import { formatAjoGroupData } from "../messages/group.message";
-import { ajoGroupKeyboard } from "../keyboards/group.keyboard";
+import { formatAjoGroupData } from "../messages/group";
+import { ajoGroupKeyboard } from "../keyboards/group";
 
 async function viewGroupCallback(ctx: Context) {
   if (!ctx.callbackQuery || !("data" in ctx.callbackQuery) || !ctx.callbackQuery.data || !ctx.from) return;

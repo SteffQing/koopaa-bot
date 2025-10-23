@@ -1,9 +1,5 @@
-import { privySigningError } from "../messages/error.messages";
-import {
-  formatAjoGroupSummary,
-  formatInviteCodeGenerated,
-  formatRequestToJoinAjoGroup,
-} from "../messages/join_group.message";
+import { privySigningError } from "../messages/error_messages";
+import { formatAjoGroupSummary, formatInviteCodeGenerated, formatRequestToJoinAjoGroup } from "../messages/join_group";
 import { Balance } from "../models/db.model";
 import { AjoGroupData, GridAjoSetup } from "../models/koopaa.api";
 import { Context } from "../models/telegraf.model";

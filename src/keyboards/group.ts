@@ -1,4 +1,5 @@
 import type { AjoGroupDataWithYou } from "../models/koopaa.api";
+import { getInviteCodeKeyboard } from "./general";
 
 function ajoGroupKeyboard({ group, address }: AjoGroupDataWithYou) {
   const inWaitingRoom = group.waitingRoom.map((w) => w.toLowerCase()).includes(address.toLowerCase());
@@ -8,7 +9,8 @@ function ajoGroupKeyboard({ group, address }: AjoGroupDataWithYou) {
 
   if (!group.startTimestamp) {
     const keyboard = [];
-    keyboard.push([{ text: "Generate Invite Code", callback_data: `invite:${group.pda}` }]);
+    const [inviteCodeKeyboard] = getInviteCodeKeyboard(group.pda);
+    keyboard.push(inviteCodeKeyboard!);
     if (isAdmin)
       keyboard.push([
         { text: "Waiting Room", callback_data: `start:${group.pda}` },

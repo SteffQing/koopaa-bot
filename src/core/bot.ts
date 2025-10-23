@@ -9,7 +9,7 @@ import { helpCmd, startCmd } from "../commands/start";
 import { profileCmd } from "../commands/profile";
 import botCommands from "../commands/commands";
 import { createGroupCmd, handleCreateGroupFlow } from "../commands/create_group";
-import { confirmOrCancelCreateAjoCallback, selectedCoverCallback } from "../callbacks/create_group.callback";
+import { confirmOrCancelCreateAjoCallback, selectedCoverCallback } from "../callbacks/create_group";
 import {
   confirmOrCancelRequestJoinAjoCallback,
   getInviteCodeCallback,

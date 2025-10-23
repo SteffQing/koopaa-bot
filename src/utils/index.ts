@@ -23,7 +23,7 @@ const getDefaultSession = (): Session => ({
   msgId: undefined,
 });
 
-async function reset(ctx: Context, deleteTrigger = false, deleteMsgId = false) {
+async function reset(ctx: Context, full_reset = false) {
   if (ctx.chat) {
     await ctx.telegram.sendChatAction(ctx.chat.id, "typing");
   }
@@ -34,23 +34,16 @@ async function reset(ctx: Context, deleteTrigger = false, deleteMsgId = false) {
     deletions.push(ctx.deleteMessage(id).catch(() => {}));
   }
 
-  if (ctx.session.msgId && deleteMsgId) {
-    deletions.push(ctx.deleteMessage(ctx.session.msgId).catch(() => {}));
-  }
-
-  // the triggering message -> e.g /start
-  if (ctx.message?.message_id && deleteTrigger) {
-    deletions.push(ctx.deleteMessage(ctx.message.message_id).catch(() => {}));
-  }
-
   await Promise.all(deletions);
 
-  // finally reset session
-  ctx.session = { ...getDefaultSession(), token: ctx.session.token };
+  if (full_reset) {
+    ctx.session = getDefaultSession();
+  } else ctx.session = { ...getDefaultSession(), token: ctx.session.token };
 }
 
-function escapeMarkdown(text = "") {
-  return text.replace(/([_*[\]()~`>#+\-=|{}.!])/g, "\\$1");
+function truncate(address: string, start = 5, end = 3) {
+  if (address.length < start + end) return address;
+  return `${address.slice(0, start)}...${address.slice(-end)}`;
 }
 
-export { asyncPipe, getDefaultSession, getEnv, reset, escapeMarkdown };
+export { asyncPipe, getDefaultSession, getEnv, reset, truncate };
