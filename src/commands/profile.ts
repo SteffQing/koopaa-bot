@@ -1,4 +1,4 @@
-import { formatUserData, formatUserDataWithBalance } from "../messages/general";
+import { formatUserData, formatUserDataWithBalance } from "../messages/profile";
 import type { User, Balance } from "../models/db.model";
 import type { Context } from "../models/telegraf.model";
 import { query } from "../utils/fetch";

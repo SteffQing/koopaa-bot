@@ -42,4 +42,14 @@ function getApiData<T = object>(error: string | undefined, data: T | undefined) 
   return data;
 }
 
-export { errorWrapper, getApiData };
+function getApiDataWithMessage<T = object>(
+  error: string | undefined,
+  data: T | undefined,
+  message: string | undefined
+) {
+  if (!message) throw new Error("Malformed API Response");
+  const apiData = getApiData(error, data);
+  return { apiData, msg: message };
+}
+
+export { errorWrapper, getApiData, getApiDataWithMessage };

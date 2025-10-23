@@ -16,17 +16,6 @@ function formatAjoGroupSummary(v: AjoGroupData, msg: string) {
 `;
 }
 
-function formatInviteCodeGenerated(msg: string, code_: string) {
-  return fmt`🎉 ${bold("Invite Code generated successfully!")}
-
-${msg}
-
-${code(code_)}
-
-${italic("This code is only valid for 7 days!")}
-  `;
-}
-
 type GridAjoSetupWithPda = Omit<GridAjoSetup, "messageId"> & { pda: string };
 function formatRequestToJoinAjoGroup({ signature, name, pda }: GridAjoSetupWithPda) {
   const explorer = `https://solscan.io/tx/${signature}?cluster=devnet`;
@@ -42,4 +31,4 @@ ${italic("You are now in the waiting room. You can invite members and start cont
   `;
 }
 
-export { formatAjoGroupSummary, formatInviteCodeGenerated, formatRequestToJoinAjoGroup };
+export { formatAjoGroupSummary, formatRequestToJoinAjoGroup };

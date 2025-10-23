@@ -1,29 +1,14 @@
-import { fmt, bold, italic, code, link } from "telegraf/format";
-import { Balance, User } from "../models/db.model";
-import { truncate } from "../utils";
+import { bold, code, fmt, italic } from "telegraf/format";
 
-function formatUserData(user: User) {
-  return fmt`${bold`👤 Your Profile`}
+function formatInviteCodeGenerated(msg: string, code_: string) {
+  return fmt`🎉 ${bold("Invite Code generated successfully!")}
 
-${bold`Email Address: `} ${user.email}
-${bold`Wallet Address: `} ${code(truncate(user.address))}
-   
-${bold`Balances: `}${italic`_Loading..._`}
-`;
+${msg}
+
+${code(code_)}
+
+${italic("This code is only valid for 7 days!")}
+  `;
 }
 
-function formatUserDataWithBalance(user: User, balance: Balance) {
-  return fmt`${bold`👤 Your Profile`}
-
-${bold`Email Address: `} ${user.email}
-${bold`Wallet Address: `} ${code(truncate(user.address))}
-   
-${bold`Balances: `}
-• SOL: ${balance.solBalance.toFixed(4)}
-• USDC: ${balance.usdcBalance.toFixed(2)}
-
-${link("View more on Solscan", `https://solscan.io/account/${user.address}`)}
-`;
-}
-
-export { formatUserData, formatUserDataWithBalance };
+export { formatInviteCodeGenerated };
