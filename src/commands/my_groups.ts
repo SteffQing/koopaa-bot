@@ -1,8 +1,8 @@
 import type { Context } from "../models/telegraf.model";
 import { query } from "../utils/fetch";
 import cache from "../db/cache";
-import type { MyGroupsSummary } from "../models/mygroup.model";
-import { myGroupSummarySelectViewKeyboard } from "../keyboards/my_group";
+import type { MyGroupsSummary } from "../models/my_groups.model";
+import { myGroupSummarySelectViewKeyboard } from "../keyboards/my_groups";
 import { formatMyGroupsSummary } from "../messages/my_groups";
 import { getApiData, errorWrapper } from "../utils/helpers";
 

@@ -1,5 +1,5 @@
 import { fmt, bold, italic } from "telegraf/format";
-import type { GroupSelectionType, MyGroupsSummary, MyGroupSummary } from "../models/mygroup.model";
+import type { GroupSelectionType, MyGroupsSummary, MyGroupSummary } from "../models/my_groups.model";
 
 function formatMyGroupsSummary(summary: MyGroupsSummary, name: string) {
   const { activeGroupsIn, notStartedGroupsIn, inWaitingRoomGroups } = summary;

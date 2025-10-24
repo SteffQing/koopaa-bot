@@ -1,7 +1,7 @@
 import type { Context } from "../models/telegraf.model";
 import cache from "../db/cache";
-import type { MyGroupsSummary, GroupSelectionType } from "../models/mygroup.model";
-import { myGroupSelectKeyboard } from "../keyboards/my_group";
+import type { MyGroupsSummary, GroupSelectionType } from "../models/my_groups.model";
+import { myGroupSelectKeyboard } from "../keyboards/my_groups";
 import { formatGroupSummary } from "../messages/my_groups";
 import { errorWrapper } from "../utils/helpers";
 

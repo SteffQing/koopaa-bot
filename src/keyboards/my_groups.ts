@@ -1,4 +1,4 @@
-import type { MyGroupSummary } from "../models/mygroup.model";
+import type { MyGroupSummary } from "../models/my_groups.model";
 
 const myGroupSummarySelectViewKeyboard = [
   [
@@ -15,8 +15,8 @@ function myGroupSelectKeyboard(groups: MyGroupSummary[]) {
 function requestJoinGroupKeyboard(pda: string) {
   return [
     [
-      { text: "✅ Confirm", callback_data: `request_join_ajo:confirm:${pda}` },
-      { text: "❌ Cancel", callback_data: "request_join_ajo:cancel" },
+      { text: "✅ Confirm", callback_data: `join_ajo:${pda}` },
+      { text: "❌ Cancel", callback_data: "join_ajo:cancel" },
     ],
   ];
 }

@@ -4,18 +4,20 @@ import { getDefaultSession } from "../utils";
 import store from "../db/sqlite3";
 import type { FastifyInstance } from "fastify";
 import type { Context } from "../models/telegraf.model";
-import { revalidateCmd, signInCmd, signOutCmd, signUpCmd, signUpMsgHandler } from "../commands/auth";
+import { revalidateCmd, signInCmd, signOutCmd, signUpCmd } from "../commands/auth";
 import { helpCmd, startCmd } from "../commands/start";
 import { profileCmd } from "../commands/profile";
 import botCommands from "../commands/commands";
-import { createGroupCmd, handleCreateGroupFlow } from "../commands/create_group";
-import { confirmOrCancelCreateAjoCallback, selectedCoverCallback } from "../callbacks/create_group";
-import {
-  confirmOrCancelRequestJoinAjoCallback,
-  getInviteCodeCallback,
-  handleRequestJoinWithCode,
-  requestJoinGroupCmd,
-} from "../commands/join_group";
+import { createGroupCmd } from "../commands/create_group";
+import { confirmOrCancelCreateAjoCb, selectGroupCoverCb } from "../callbacks/create_group";
+import { requestJoinGroupCmd } from "../commands/join_group";
+import { getGroupInviteCodeCb, viewGroupCb } from "../callbacks/group";
+import { actionRequestJoinGroupCb } from "../callbacks/join_group";
+import { authMsgHdlr } from "../handlers/auth";
+import { createGroupFlowHdlr } from "../handlers/create_group";
+import { joinAjoGroupWithCodeHdlr } from "../handlers/join_group";
+import { myGroupsCmd } from "../commands/my_groups";
+import { viewMyGroupsSummaryCb } from "../callbacks/my_groups";
 // import type { Update } from "telegraf/typings/core/types/typegram";
 
 async function init(fastify: FastifyInstance) {
@@ -48,19 +50,25 @@ async function init(fastify: FastifyInstance) {
 
         // Create Ajo group Commands
         bot.command("create_group", createGroupCmd);
-        bot.action(/^(choose_cover):(.+)$/, selectedCoverCallback);
-        bot.action(/^(create_ajo):(.+)$/, confirmOrCancelCreateAjoCallback);
+        bot.action(/^(choose_cover):(.+)$/, selectGroupCoverCb);
+        bot.action(/^(create_ajo):(.+)$/, confirmOrCancelCreateAjoCb);
 
         // Join Ajo group Commands
         bot.command("join_group", requestJoinGroupCmd);
-        bot.action(/^(invite):(.+)$/, getInviteCodeCallback); // from create and other inline buttons
-        bot.action(/^(request_join_ajo):(.+)$/, confirmOrCancelRequestJoinAjoCallback);
+        bot.action(/^(invite):(.+)$/, getGroupInviteCodeCb); // from create and other inline buttons
+        bot.action(/^(join_ajo):(.+)$/, actionRequestJoinGroupCb);
+
+        // Ajo Group Commands and Callbacks
+        bot.command("my_groups", myGroupsCmd);
+        bot.action(/^(group_summary):(.+)$/, viewMyGroupsSummaryCb);
+        bot.action(/^(group):(.+)$/, viewGroupCb);
 
         bot.on("message", async (ctx, next) => {
           const { state } = ctx.session;
-          if (state.startsWith("auth:")) await signUpMsgHandler(ctx);
-          else if (state === "create_ajo") await handleCreateGroupFlow(ctx);
-          else if (state === "join_ajo") await handleRequestJoinWithCode(ctx);
+
+          if (state.startsWith("auth:")) await authMsgHdlr(ctx, next);
+          else if (state === "create_ajo") await createGroupFlowHdlr(ctx, next);
+          else if (state === "join_ajo") await joinAjoGroupWithCodeHdlr(ctx, next);
           return await next();
         });
 

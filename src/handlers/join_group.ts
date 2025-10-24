@@ -1,4 +1,4 @@
-import { requestJoinGroupKeyboard } from "../keyboards/my_group";
+import { requestJoinGroupKeyboard } from "../keyboards/my_groups";
 import { formatAjoGroupSummary } from "../messages/join_group";
 import { AjoGroupData } from "../models/koopaa.api";
 import { Context } from "../models/telegraf.model";
