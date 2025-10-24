@@ -16,7 +16,30 @@ async function _viewGroupCb(ctx: Context) {
 
   await ctx.sendChatAction("typing");
   const { data, error } = await query.get<AjoGroupDataWithYou>(`/group/${pda}/group-data`, {
-    headers: { Authorization: ctx.session.token },
+    headers: { Authorization: `Bearer ${ctx.session.token}` },
+  });
+
+  const { group, address } = getApiData(error, data);
+  await ctx.answerCbQuery();
+
+  const msg = formatAjoGroupData(group);
+  const keyboard = ajoGroupKeyboard({ group, address });
+  await ctx.reply(msg, {
+    reply_markup: { inline_keyboard: keyboard },
+  });
+}
+
+async function _contributeCb(ctx: Context) {
+  if (!ctx.callbackQuery || !("data" in ctx.callbackQuery) || !ctx.from) throw new Error("Invalid callback query");
+  await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+
+  const [, pda] = ctx.callbackQuery.data.split(":");
+  if (!pda) throw new Error("No pda in callback 🫣");
+  if (!ctx.session.token) throw new Error("You need to /sign_in first.");
+
+  await ctx.sendChatAction("typing");
+  const { data, error } = await query.post<AjoGroupDataWithYou>(`/grid/${pda}`, {
+    headers: { Authorization: `Bearer ${ctx.session.token}` },
   });
 
   const { group, address } = getApiData(error, data);
@@ -51,5 +74,6 @@ async function _getGroupInviteCodeCb(ctx: Context) {
 
 const viewGroupCb = errorWrapper(_viewGroupCb);
 const getGroupInviteCodeCb = errorWrapper(_getGroupInviteCodeCb);
+const contributeCb = errorWrapper(_contributeCb);
 
-export { viewGroupCb, getGroupInviteCodeCb };
+export { viewGroupCb, getGroupInviteCodeCb, contributeCb };

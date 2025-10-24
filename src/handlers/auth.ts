@@ -17,7 +17,7 @@ async function _authMsgHdlr(ctx: Context) {
       await ctx.sendChatAction("typing");
       const { error, message } = await query.put("/auth/external", {
         body: { email: text },
-        headers: { Authorization: `Bearer ${ctx.telegram.token}` },
+        headers: { Authorization: `Basic ${ctx.telegram.token}` },
       });
 
       if (error) throw error;
@@ -36,7 +36,7 @@ async function _authMsgHdlr(ctx: Context) {
       await ctx.sendChatAction("typing");
       const { data, ...rest } = await query.patch<{ token: string }>("/auth/external", {
         body: { otp: text, email: cachedEmail, username: from.username, id: from.id.toString() },
-        headers: { Authorization: `Bearer ${ctx.telegram.token}` },
+        headers: { Authorization: `Basic ${ctx.telegram.token}` },
       });
 
       if (!rest.message) throw new Error("Malformed API response");

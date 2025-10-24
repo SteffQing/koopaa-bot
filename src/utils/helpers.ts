@@ -1,6 +1,7 @@
 import type { MiddlewareFn } from "telegraf";
 import type { Context } from "../models/telegraf.model";
-import { privySigningError } from "../messages/error_messages";
+import { privySigningError, unauthorizedError } from "../messages/error_messages";
+import { Message } from "telegraf/typings/core/types/typegram";
 
 function errorWrapper(handler: MiddlewareFn<Context>): MiddlewareFn<Context> {
   const functionName = handler.name || "anonymousHandler";
@@ -19,19 +20,29 @@ function errorWrapper(handler: MiddlewareFn<Context>): MiddlewareFn<Context> {
     } catch (error) {
       console.error(`${functionName} error:`, error);
       const message = error instanceof Error ? error.message : String(error);
-      if (message === "Privy signing error") {
-        const { message_id } = await ctx.reply(privySigningError);
-        ctx.session.toDelete.push(message_id);
-        return;
+
+      let reply: Message.TextMessage | undefined;
+
+      switch (message) {
+        case "Unauthorized":
+          reply = await ctx.reply(unauthorizedError);
+          break;
+
+        case "Privy signing error":
+          reply = await ctx.reply(privySigningError);
+          break;
+
+        default:
+          const error_message = `⚠️ ${message}`;
+          if ("callbackQuery" in ctx && ctx.callbackQuery && !ctx._cbAnswered) {
+            await ctx.answerCbQuery(error_message, { show_alert: true });
+          } else {
+            reply = await ctx.reply(error_message);
+          }
+          break;
       }
 
-      const error_message = `⚠️ ${message}`;
-      if ("callbackQuery" in ctx && ctx.callbackQuery && !ctx._cbAnswered) {
-        await ctx.answerCbQuery(error_message, { show_alert: true });
-      } else {
-        const { message_id } = await ctx.reply(error_message);
-        ctx.session.toDelete.push(message_id);
-      }
+      if (reply) ctx.session.toDelete.push(reply.message_id);
     }
   };
 }

@@ -11,7 +11,7 @@ import botCommands from "../commands/commands";
 import { createGroupCmd } from "../commands/create_group";
 import { confirmOrCancelCreateAjoCb, selectGroupCoverCb } from "../callbacks/create_group";
 import { requestJoinGroupCmd } from "../commands/join_group";
-import { getGroupInviteCodeCb, viewGroupCb } from "../callbacks/group";
+import { contributeCb, getGroupInviteCodeCb, viewGroupCb } from "../callbacks/group";
 import { actionRequestJoinGroupCb } from "../callbacks/join_group";
 import { authMsgHdlr } from "../handlers/auth";
 import { createGroupFlowHdlr } from "../handlers/create_group";
@@ -62,6 +62,9 @@ async function init(fastify: FastifyInstance) {
         bot.command("my_groups", myGroupsCmd);
         bot.action(/^(group_summary):(.+)$/, viewMyGroupsSummaryCb);
         bot.action(/^(group):(.+)$/, viewGroupCb);
+        bot.action(/^(contribute):(.+)$/, contributeCb);
+        bot.action(/^(waiting_room):(.+)$/, contributeCb);
+        bot.action(/^(add_participant):(.+)$/, contributeCb);
 
         bot.on("message", async (ctx, next) => {
           const { state } = ctx.session;

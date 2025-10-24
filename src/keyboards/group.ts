@@ -13,8 +13,8 @@ function ajoGroupKeyboard({ group, address }: AjoGroupDataWithYou) {
     keyboard.push(inviteCodeKeyboard!);
     if (isAdmin)
       keyboard.push([
-        { text: "Waiting Room", callback_data: `start:${group.pda}` },
-        { text: "Add Participant", callback_data: `start:${group.pda}` },
+        { text: "Waiting Room", callback_data: `waiting_room:${group.pda}` },
+        { text: "Add Participant", callback_data: `add_participant:${group.pda}` },
       ]);
     return keyboard;
   }

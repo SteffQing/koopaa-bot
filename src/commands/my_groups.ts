@@ -15,7 +15,7 @@ async function _myGroupsCmd(ctx: Context) {
 
   await ctx.sendChatAction("typing");
   const { data, error } = await query.get<MyGroupsSummary>("/group/my-groups-summary", {
-    headers: { Authorization: session.token },
+    headers: { Authorization: `Bearer ${session.token}` },
   });
 
   const apiData = getApiData(error, data);

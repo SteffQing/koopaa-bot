@@ -12,7 +12,7 @@ async function _signInCmd(ctx: Context) {
   await ctx.sendChatAction("typing");
   const { data, error, message } = await query.post<{ token: string }>("/auth/external", {
     body: { id: from.id.toString() },
-    headers: { Authorization: `Bearer ${ctx.telegram.token}` },
+    headers: { Authorization: `Basic ${ctx.telegram.token}` },
   });
 
   const { token } = getApiData(error, data);
@@ -57,7 +57,7 @@ async function _revalidateCmd(ctx: Context) {
   await ctx.sendChatAction("typing");
   const { error, message } = await query.put<{ token: string }>("/auth/revalidate", {
     body: { id: from.id.toString() },
-    headers: { Authorization: `Bearer ${ctx.telegram.token}` },
+    headers: { Authorization: `Basic ${ctx.telegram.token}` },
   });
 
   await reset(ctx, true);
