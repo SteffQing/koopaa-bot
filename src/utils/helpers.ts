@@ -1,6 +1,6 @@
 import type { MiddlewareFn } from "telegraf";
 import type { Context } from "../models/telegraf.model";
-import { privySigningError, unauthorizedError } from "../messages/error_messages";
+import { expiredGridAuthenticationError, privySigningError, unauthorizedError } from "../messages/error_messages";
 import { Message } from "telegraf/typings/core/types/typegram";
 
 function errorWrapper(handler: MiddlewareFn<Context>): MiddlewareFn<Context> {
@@ -30,6 +30,10 @@ function errorWrapper(handler: MiddlewareFn<Context>): MiddlewareFn<Context> {
 
         case "Privy signing error":
           reply = await ctx.reply(privySigningError);
+          break;
+
+        case "Authentication session expired":
+          reply = await ctx.reply(expiredGridAuthenticationError);
           break;
 
         default:

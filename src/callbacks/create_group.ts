@@ -43,14 +43,13 @@ async function _selectGroupCoverCb(ctx: Context) {
 }
 
 async function _confirmOrCancelCreateAjoCb(ctx: Context) {
-  if (!ctx.callbackQuery || !("data" in ctx.callbackQuery) || !ctx.from) return;
-
-  await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
-  const key = "create_ajo:" + ctx.from.id;
-
-  if (!cache.has(key)) throw new Error("Group data is lost or expired. Please restart with /create_group.");
-  const partial: CreateAjoGroupFormValues = JSON.parse(cache.get(key) || "{}");
+  if (!ctx.callbackQuery || !("data" in ctx.callbackQuery) || !ctx.from) throw new Error("Invalid callback query");
   const [, action] = ctx.callbackQuery.data.split(":");
+
+  const key = "create_ajo:" + ctx.from.id;
+  if (!cache.has(key)) throw new Error("Group data is lost or expired. Please restart with /create_group.");
+
+  const partial: CreateAjoGroupFormValues = JSON.parse(cache.get(key) || "{}");
 
   await reset(ctx);
 
@@ -73,7 +72,7 @@ async function _confirmOrCancelCreateAjoCb(ctx: Context) {
   } else if (action === "cancel") {
     await ctx.answerCbQuery("Ajo group creation cancelled.");
   }
-
+  await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
   cache.delete(key);
   // if (msgId) await ctx.telegram.editMessageReplyMarkup(ctx.chat!.id, msgId, undefined, undefined);
 }

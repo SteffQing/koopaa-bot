@@ -7,7 +7,6 @@ import { errorWrapper } from "../utils/helpers";
 
 async function _viewMyGroupsSummaryCb(ctx: Context) {
   if (!ctx.callbackQuery || !("data" in ctx.callbackQuery)) throw new Error("Invalid callback query");
-  await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
 
   const [, selection] = ctx.callbackQuery.data.split(":") as [string, GroupSelectionType];
   if (!ctx.from) throw new Error("No user found 🫣");
@@ -28,11 +27,12 @@ async function _viewMyGroupsSummaryCb(ctx: Context) {
       ? data.notStartedGroupsIn
       : data.inWaitingRoomGroups;
 
-  if (selectedData.length === 0) throw new Error("Nothing to see here 👀");
+  if (!selectedData.length)
+    return await ctx.editMessageText("Nothing to see here 👀", { reply_markup: { inline_keyboard: [] } });
 
   const msg = formatGroupSummary(selectedData, selection);
   const keyboard = myGroupSelectKeyboard(selectedData);
-  await ctx.reply(msg, {
+  await ctx.editMessageText(msg, {
     reply_markup: { inline_keyboard: keyboard },
   });
 }

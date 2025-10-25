@@ -24,21 +24,12 @@ const getDefaultSession = (): Session => ({
 });
 
 async function reset(ctx: Context, full_reset = false) {
-  if (ctx.chat) {
-    await ctx.telegram.sendChatAction(ctx.chat.id, "typing");
-  }
+  const { toDelete, token } = ctx.session;
+  await ctx.sendChatAction("typing");
+  if (toDelete.length) await ctx.deleteMessages(toDelete);
 
-  const deletions: Promise<unknown>[] = [];
-
-  for (const id of ctx.session.toDelete) {
-    deletions.push(ctx.deleteMessage(id).catch(() => {}));
-  }
-
-  await Promise.all(deletions);
-
-  if (full_reset) {
-    ctx.session = getDefaultSession();
-  } else ctx.session = { ...getDefaultSession(), token: ctx.session.token };
+  if (full_reset) ctx.session = getDefaultSession();
+  else ctx.session = { ...getDefaultSession(), token };
 }
 
 function truncate(address: string, start = 5, end = 3) {

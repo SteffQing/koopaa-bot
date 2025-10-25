@@ -33,4 +33,11 @@ function ajoGroupKeyboard({ group, address }: AjoGroupDataWithYou) {
   return [];
 }
 
-export { ajoGroupKeyboard };
+const waitlistRequestKeyboard = [
+  [
+    { text: "Accept", callback_data: `waitlist:accept` },
+    { text: "Reject", callback_data: `waitlist:reject` },
+  ],
+];
+
+export { ajoGroupKeyboard, waitlistRequestKeyboard };

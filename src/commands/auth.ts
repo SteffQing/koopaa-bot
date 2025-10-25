@@ -18,8 +18,7 @@ async function _signInCmd(ctx: Context) {
   const { token } = getApiData(error, data);
   ctx.session = { ...session, token };
 
-  const { message_id } = await ctx.reply(message ?? "Welcome back!");
-  ctx.session.toDelete.push(message_id);
+  await ctx.reply(message ?? "Welcome back!");
 }
 
 async function _signUpCmd(ctx: Context) {
@@ -42,7 +41,7 @@ async function _signOutCmd(ctx: Context) {
   if (ctx.chat?.type !== "private") throw new Error("This command can only be used in private chat");
   if (!ctx.session.token) throw new Error("You are not signed in! Please call /sign_in to sign in.");
 
-  await reset(ctx);
+  await reset(ctx, true);
   ctx.session = getDefaultSession();
   await ctx.reply("You have been signed out! Please call /sign_in to sign in.");
 }
@@ -68,9 +67,16 @@ async function _revalidateCmd(ctx: Context) {
   ctx.session.state = "auth:revalidate";
 }
 
+async function _authenticateCmd(ctx: Context) {
+  if (ctx.message?.message_id) await ctx.deleteMessage(ctx.message.message_id);
+  await reset(ctx, true);
+  await _signInCmd(ctx);
+}
+
 const signInCmd = errorWrapper(_signInCmd);
 const signUpCmd = errorWrapper(_signUpCmd);
 const signOutCmd = errorWrapper(_signOutCmd);
 const revalidateCmd = errorWrapper(_revalidateCmd);
+const authenticateCmd = errorWrapper(_authenticateCmd);
 
-export { signInCmd, signOutCmd, signUpCmd, revalidateCmd };
+export { signInCmd, signOutCmd, signUpCmd, revalidateCmd, authenticateCmd };

@@ -25,10 +25,10 @@ const botCommands: BotCommand[] = [
     command: "my_groups",
     description: "See the list of groups you belong to",
   },
-  {
-    command: "revalidate",
-    description: "Revalidate your account",
-  },
+  // {
+  //   command: "revalidate",
+  //   description: "Revalidate your account",
+  // },
   {
     command: "sign_in",
     description: "Sign in to your account",

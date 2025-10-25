@@ -9,7 +9,17 @@ const myGroupSummarySelectViewKeyboard = [
 ];
 
 function myGroupSelectKeyboard(groups: MyGroupSummary[]) {
-  return groups.slice(0, 2).map((group) => [{ text: group.name, callback_data: `group:${group.pda}` }]);
+  const buttons = groups.map((group) => ({
+    text: group.name,
+    callback_data: `group:${group.pda}`,
+  }));
+
+  const rows: (typeof buttons)[] = [];
+  for (let i = 0; i < buttons.length; i += 2) {
+    rows.push(buttons.slice(i, i + 2));
+  }
+
+  return rows;
 }
 
 function requestJoinGroupKeyboard(pda: string) {

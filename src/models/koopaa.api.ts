@@ -4,7 +4,9 @@ type GridAjoInit = {
   messageId: string;
 };
 
-type GridAjoSetup = Omit<GridAjoInit, "pda"> & {
+type GridAjo = Omit<GridAjoInit, "pda">;
+
+type GridAjoSetup = GridAjo & {
   name: string;
 };
 
@@ -41,4 +43,25 @@ type AjoGroupDataWithYou = {
   group: AjoGroupData;
 };
 
-export type { GridAjoSetup, AjoGroupData, AjoGroupParticipantData, Tag, GridAjoInit, AjoGroupDataWithYou };
+type Waitlist = {
+  address: string;
+  username: string | null;
+};
+
+type WaitlistData = {
+  waitlist: Waitlist[];
+  name: string;
+  participants: number[];
+};
+
+export type {
+  Waitlist,
+  WaitlistData,
+  GridAjoSetup,
+  AjoGroupData,
+  AjoGroupParticipantData,
+  Tag,
+  GridAjoInit,
+  AjoGroupDataWithYou,
+  GridAjo,
+};

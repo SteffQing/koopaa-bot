@@ -5,19 +5,20 @@ function formatMyGroupsSummary(summary: MyGroupsSummary, name: string) {
   const { activeGroupsIn, notStartedGroupsIn, inWaitingRoomGroups } = summary;
 
   const notStartedMsg = notStartedGroupsIn.length
-    ? "are not in any Ajo groups that is yet to start."
-    : `have also been confirmed as a member of ${summary.notStartedGroupsIn.length} Ajo groups.`;
+    ? `are a member of ${summary.notStartedGroupsIn.length} Ajo groups that are yet to start.`
+    : "are not in any Ajo groups that is yet to start.";
 
   const notStartedItalic = notStartedGroupsIn.length
-    ? "You can create one with /create_group or join any, with an invite code 🫠"
-    : "You can fast track the start of this group by inviting more members of your circle 😉";
+    ? "You can fast track the start of this group by inviting more members of your circle 😉"
+    : "You can create one with /create_group or join any, with an invite code 🫠";
 
-  return fmt`${bold("Your Groups Summary:")}
+  return fmt`${bold("Your Groups Summary")}
   
-Hi ${name}, you are in ${activeGroupsIn.length} groups. 
+Hi ${name}, you are in ${activeGroupsIn.length} active groups. 
 ${
-  activeGroupsIn.length &&
-  italic("Endeavour to check in with these groups to see if you need to make a contribution 🙂")
+  activeGroupsIn.length
+    ? italic("Endeavour to check in with these groups to see if you need to make a contribution 🙂")
+    : ""
 }  
 
 You ${notStartedMsg} 
