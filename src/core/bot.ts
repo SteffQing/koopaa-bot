@@ -26,10 +26,10 @@ import { joinAjoGroupWithCodeHdlr } from "../handlers/join_group";
 import { myGroupsCmd } from "../commands/my_groups";
 import { viewMyGroupsSummaryCb } from "../callbacks/my_groups";
 import { addParticipantHdlr } from "../handlers/group";
-// import type { Update } from "telegraf/typings/core/types/typegram";
+import type { Update } from "telegraf/typings/core/types/typegram";
 
 async function init(fastify: FastifyInstance) {
-  const { BOT_TOKEN } = fastify.config;
+  const { BOT_TOKEN, WEBHOOK_URL } = fastify.config;
 
   await fastify.register(
     fp<{ token: string; store: typeof store }>(
@@ -87,11 +87,11 @@ async function init(fastify: FastifyInstance) {
           return await next();
         });
 
-        bot.launch(() => console.log("Bot is running..."));
-        // const webhookPath = "/telegram";
-        // const webhookUrl = `${WEBHOOK_URL}${webhookPath}`;
+        // bot.launch(() => console.log("Bot is running..."));
+        const webhookPath = "/telegram";
+        const webhookUrl = `${WEBHOOK_URL}${webhookPath}`;
 
-        // await bot.telegram.setWebhook(webhookUrl);
+        await bot.telegram.setWebhook(webhookUrl);
 
         await bot.telegram.deleteMyCommands();
         await Promise.all([
@@ -109,10 +109,10 @@ async function init(fastify: FastifyInstance) {
           }),
         ]);
 
-        // fastify.post(webhookPath, async (request, reply) => {
-        //   await bot.handleUpdate(request.body as Update);
-        //   return reply.send({ ok: true });
-        // });
+        fastify.post(webhookPath, async (request, reply) => {
+          await bot.handleUpdate(request.body as Update);
+          return reply.send({ ok: true });
+        });
 
         fastify.decorate("bot", bot);
       },
