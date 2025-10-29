@@ -3,7 +3,7 @@ import { getInviteCodeKeyboard } from "./general";
 
 function ajoGroupKeyboard({ group, address }: AjoGroupDataWithYou) {
   const inWaitingRoom = group.waitingRoom.map((w) => w.toLowerCase()).includes(address.toLowerCase());
-  if (inWaitingRoom) return [[{ text: "Ping Admin for Approval", callback_data: `ping:${group.admin}:${group.pda}` }]];
+  if (inWaitingRoom) return [[{ text: "Ping Admin for Approval", callback_data: `ping:${group.pda}` }]];
 
   const isAdmin = group.admin.toLowerCase() === address.toLowerCase();
 

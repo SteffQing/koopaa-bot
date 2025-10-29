@@ -34,11 +34,11 @@ function formatGroupSummary(summaries: MyGroupSummary[], type: GroupSelectionTyp
   const groups = summaries.map((s, i) => `${i + 1}. ${s.name}`).join("\n");
   return fmt`${bold(
     `Groups you are ${type === "waitingRoom" ? "in the waiting room for" : "active in"}${
-      type === "notStarted" && " (but has not started contributions yet)"
+      type === "notStarted" ? " (but has not started contributions yet)" : ""
     }`
   )}
   
-You are in the following ${summaries.length === 1 ? "" : summaries.length} group${summaries.length > 1 ? "s" : ""}
+You are in the following${summaries.length === 1 ? "" : summaries.length} group${summaries.length > 1 ? "s" : ""}
 ${groups}
 
 ${italic("Please select any of the groups from the buttons below to view more actions and info about that group")}

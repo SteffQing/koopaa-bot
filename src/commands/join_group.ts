@@ -13,6 +13,8 @@ async function _requestJoinGroupCmd(ctx: Context) {
     headers: { Authorization: `Bearer ${ctx.session.token}` },
   });
 
+  console.log("balance queried", data);
+
   const { solBalance } = getApiData(error, data);
   if (solBalance < 0.001) throw new Error("0.001 SOL needed to cover the transaction fee.");
 

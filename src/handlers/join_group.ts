@@ -12,7 +12,7 @@ async function _joinAjoGroupWithCodeHdlr(ctx: Context) {
 
   const text = ctx.message.text.trim();
 
-  await reset(ctx, true);
+  await reset(ctx);
   const { data, error, message } = await query.get<AjoGroupData>("/invite", {
     headers: { Authorization: `Bearer ${ctx.session.token}` },
     params: { code: text },

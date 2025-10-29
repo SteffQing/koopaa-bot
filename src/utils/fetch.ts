@@ -61,7 +61,7 @@ class CustomFetch {
         body: body ? JSON.stringify(body) : null,
       });
 
-      if (response.status === 401) throw new Error("Unauthorized");
+      // if (response.status === 401) throw new Error("Unauthorized");
 
       const { error, data, meta, ok, message } = await response.json();
       return {

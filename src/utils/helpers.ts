@@ -62,8 +62,8 @@ function getApiDataWithMessage<T = object>(
   data: T | undefined,
   message: string | undefined
 ) {
-  if (!message) throw new Error("Malformed API Response");
   const apiData = getApiData(error, data);
+  if (!message) throw new Error("Malformed API Response");
   return { apiData, msg: message };
 }
 

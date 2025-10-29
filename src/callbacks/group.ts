@@ -132,11 +132,41 @@ async function _waitlistCb(ctx: Context) {
   await addParticipantToGroup_(ctx, participant, "waitlist");
 }
 
+async function _pingGroupAdminCb(ctx: Context) {
+  if (!ctx.callbackQuery || !("data" in ctx.callbackQuery) || !ctx.from) throw new Error("Invalid callback query");
+  await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+  await ctx.answerCbQuery();
+
+  const [, pda] = ctx.callbackQuery.data.split(":");
+  if (!pda) throw new Error("No pda in callback 🫣");
+  if (!ctx.session.token) throw new Error("You need to /sign_in first.");
+
+  await ctx.sendChatAction("typing");
+  const { message, error } = await query.post(`/ping`, {
+    headers: { Authorization: `Bearer ${ctx.session.token}` },
+    body: { pda },
+  });
+
+  if (error) throw error;
+
+  await ctx.answerCbQuery();
+  await ctx.reply(message || "Something went wrong 🫣");
+}
+
 const viewGroupCb = errorWrapper(_viewGroupCb);
 const getGroupInviteCodeCb = errorWrapper(_getGroupInviteCodeCb);
 const contributeCb = errorWrapper(_contributeCb);
 const addParticipantCb = errorWrapper(_addParticipantCb);
 const waitingRoomCb = errorWrapper(_waitingRoomCb);
 const waitlistCb = errorWrapper(_waitlistCb);
+const pingGroupAdminCb = errorWrapper(_pingGroupAdminCb);
 
-export { viewGroupCb, getGroupInviteCodeCb, contributeCb, addParticipantCb, waitingRoomCb, waitlistCb };
+export {
+  viewGroupCb,
+  getGroupInviteCodeCb,
+  contributeCb,
+  addParticipantCb,
+  waitingRoomCb,
+  waitlistCb,
+  pingGroupAdminCb,
+};

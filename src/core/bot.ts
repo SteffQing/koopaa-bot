@@ -18,6 +18,7 @@ import {
   viewGroupCb,
   waitingRoomCb,
   waitlistCb,
+  pingGroupAdminCb,
 } from "../callbacks/group";
 import { actionRequestJoinGroupCb } from "../callbacks/join_group";
 import { authMsgHdlr } from "../handlers/auth";
@@ -72,6 +73,7 @@ async function init(fastify: FastifyInstance) {
         // bot.command("add_p", addParticipantCmd);
         bot.action(/^(group_summary):(.+)$/, viewMyGroupsSummaryCb);
         bot.action(/^(group):(.+)$/, viewGroupCb);
+        bot.action(/^(ping):(.+)$/, pingGroupAdminCb);
         bot.action(/^(contribute):(.+)$/, contributeCb);
         bot.action(/^(waiting_room):(.+)$/, waitingRoomCb);
         bot.action(/^(add_participant):(.+)$/, addParticipantCb);
